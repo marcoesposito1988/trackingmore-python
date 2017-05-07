@@ -1,0 +1,27 @@
+language: python
+python:
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7-dev"
+  - "pypy3"
+install:
+  - pip install requests pytest
+script:
+  - py.test --cov-report term-missing --cov=trackingmore
+matrix:
+  allow_failures:
+    - python: 3.7-dev
+    - python: pypy3
+branches:
+  only:
+   - master
+after_success:
+    - coveralls
+notifications:
+  email:
+    recipients:
+      - marcoesposito1988@gmail.com
+    on_success: always
+    on_failure: always
