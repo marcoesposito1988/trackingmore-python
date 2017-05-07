@@ -3,3 +3,12 @@
 
 # pytrackingmore
 Python wrapper for the TrackingMore API
+
+This library supports the following methods of the TrackingMore API:
+
+- Creating a new tracking item, given the courier code and the tracking number
+- Creating a batch of tracking items, given the courier code and the tracking number
+- Updating a tracking item, given the courier code and the tracking number
+- Deleting a tracking item, given the courier code and the tracking number
+- Querying the tracking data for an item from the courier API in real time
+- Detecting the courier from the tracking number
