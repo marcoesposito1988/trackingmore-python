@@ -1,4 +1,8 @@
-testdata.py
+build
+dist
+trackingmore.egg-info
+
+trackingmore/testdata/testdata.py
 .idea
 *.iml
 __pycache__

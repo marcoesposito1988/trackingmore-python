@@ -1,5 +1,5 @@
-import trackingmore
-import testdata
+from . import trackingmore
+from trackingmore.testdata import testdata
 
 trackingmore.set_api_key(testdata.API_KEY)
 
