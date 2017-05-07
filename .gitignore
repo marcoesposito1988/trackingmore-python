@@ -1,0 +1,5 @@
+testdata.py
+.idea
+*.iml
+__pycache__
+.cache
