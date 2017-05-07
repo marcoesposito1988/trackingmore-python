@@ -6,6 +6,8 @@ python:
   - "3.6"
   - "3.7-dev"
   - "pypy3"
+before_install:
+  - openssl aes-256-cbc -K $encrypted_82809c4caae0_key -iv $encrypted_82809c4caae0_iv -in trackingmore/testdata/testdata.py.enc -out trackingmore/testdata/testdata.py -d
 install:
   - pip install requests pytest pytest-cov coveralls
 script:
