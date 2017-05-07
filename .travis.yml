@@ -7,7 +7,7 @@ python:
   - "3.7-dev"
   - "pypy3"
 install:
-  - pip install requests pytest
+  - pip install requests pytest pytest-cov
 script:
   - py.test --cov-report term-missing --cov=trackingmore
 matrix:
@@ -18,7 +18,7 @@ branches:
   only:
    - master
 after_success:
-    - coveralls
+  - coveralls
 notifications:
   email:
     recipients:
