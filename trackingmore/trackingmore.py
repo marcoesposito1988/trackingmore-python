@@ -237,7 +237,7 @@ def detect_carrier_from_code(tracking_code: str) -> Dict[str, Any]:
     Guess the courier from the tracking number.
     
     :param tracking_code: The package tracking number
-    :return: A dictionary with the courier's name and TrackingMore code
+    :return: A list of dictionaries with the possible couriers name and TrackingMore code
     """
     _check_api_key()
     payload = {'tracking_number': tracking_code.strip()}

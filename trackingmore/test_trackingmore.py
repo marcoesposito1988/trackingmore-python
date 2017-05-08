@@ -71,6 +71,15 @@ def test_get_all_trackings():
     # TODO: check with trackings added so far
 
 
+def test_detect_courier():
+    for ttd in testdata.TEST_TRACKING_DATAS[:-1]:
+        tracking_number = ttd['tracking_number']
+        carrier_code = ttd['carrier_code']
+
+        ret = trackingmore.detect_carrier_from_code(tracking_number)
+        assert any(r['code'] == carrier_code for r in ret)
+
+
 def test_cleanup():
     for ttd in testdata.TEST_TRACKING_DATAS:
         trackingmore.delete_tracking_item(ttd['carrier_code'], ttd['tracking_number'])
