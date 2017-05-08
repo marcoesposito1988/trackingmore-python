@@ -1,3 +1,4 @@
+from typing import NewType
 
 from enum import Enum
 from datetime import datetime, timezone
@@ -5,7 +6,9 @@ import json
 import requests
 
 headers = None
-
+"""
+Headers to be sent with an API request. Is set on set_api_key call.
+"""
 
 COURIERS = {
     'Italy': {
@@ -18,6 +21,9 @@ COURIERS = {
         'SDA Italia': 'italy-sda',
     }
 }
+"""
+Collection of courier codes for some selected couriers. More info at https://www.trackingmore.com/help_article-25-31-en.html
+"""
 
 
 class TrackingStatus(Enum):
@@ -32,6 +38,13 @@ class TrackingStatus(Enum):
 
 
 def set_api_key(api_key):
+    """
+    Set the API key to be used for authentication with every request.
+    
+    If you need one, get it by registering for a TrackingMore account.
+    :param api_key: Authentication token
+    :return: 
+    """
     global headers
     headers = {
         'Content-Type': 'application/json',
@@ -64,6 +77,19 @@ BASE_URL = 'http://api.trackingmore.com/v2'
 def get_all_trackings(limit: int = None, page: int = None, status: TrackingStatus = None,
                       created_at_min: datetime = None, created_at_max: datetime = None,
                       update_time_min: datetime = None, update_time_max: datetime = None):
+    """
+    Fetch information for all the trackings created so far.
+    
+    Use arguments for filtering and pagination.
+    :param limit: Maximum number of results to be returned
+    :param page: Number of the page to be returned (of size "limit")
+    :param status: Filter by tracking status
+    :param created_at_min: Get only items created after this datetime
+    :param created_at_max: Get only items created before this datetime
+    :param update_time_min: Get only items updated after this datetime
+    :param update_time_max: Get only items updated before this datetime
+    :return: 
+    """
     _check_api_key()
 
     payload = {}
@@ -79,10 +105,23 @@ def get_all_trackings(limit: int = None, page: int = None, status: TrackingStatu
     return r.json()
 
 
+TrackingData = NewType('TrackingData', dict)
+
 
 def create_tracking_data(carrier_code: str, tracking_number: str, title: str = None, customer_name: str = None,
                          customer_email: str = None, order_id: str = None, lang: str = None) -> TrackingData:
+    """
+    Create a dictionary holding information about a tracking item
     
+    :param carrier_code: TrackingMore code indentifying the courier company
+    :param tracking_number: Package tracking ID
+    :param title: (Optional) name for this tracking item
+    :param customer_name: (Optional) customer name
+    :param customer_email: (Optional) customer email
+    :param order_id: (Optional) your ID for this tracking item
+    :param lang: (Optional) language for strings returned by the courier (if supported)
+    :return: 
+    """
     tracking_data = {
         'carrier_code': carrier_code,
         'tracking_number': tracking_number,
