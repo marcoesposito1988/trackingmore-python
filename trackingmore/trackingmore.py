@@ -58,7 +58,7 @@ def _check_api_key():
         raise ValueError("did you set the API key with trackingmore.set_api_key('...')?")
 
 
-def add_if_existing(args, arg_name, target_dict):
+def _add_if_existing(args, arg_name, target_dict):
     if arg_name == 'status':
         if arg_name in args and type(args[arg_name]) is TrackingStatus:
             target_dict[arg_name] = args[arg_name].name
@@ -93,13 +93,13 @@ def get_all_trackings(limit: int = None, page: int = None, status: TrackingStatu
     _check_api_key()
 
     payload = {}
-    add_if_existing(locals(), 'status', payload)
-    add_if_existing(locals(), 'limit', payload)
-    add_if_existing(locals(), 'page', payload)
-    add_if_existing(locals(), 'created_at_min', payload)
-    add_if_existing(locals(), 'created_at_max', payload)
-    add_if_existing(locals(), 'update_time_min', payload)
-    add_if_existing(locals(), 'update_time_max', payload)
+    _add_if_existing(locals(), 'status', payload)
+    _add_if_existing(locals(), 'limit', payload)
+    _add_if_existing(locals(), 'page', payload)
+    _add_if_existing(locals(), 'created_at_min', payload)
+    _add_if_existing(locals(), 'created_at_max', payload)
+    _add_if_existing(locals(), 'update_time_min', payload)
+    _add_if_existing(locals(), 'update_time_max', payload)
 
     r = requests.get(BASE_URL + '/trackings/get', headers=headers)
     return r.json()
@@ -126,11 +126,11 @@ def create_tracking_data(carrier_code: str, tracking_number: str, title: str = N
         'carrier_code': carrier_code,
         'tracking_number': tracking_number,
     }
-    add_if_existing(locals(), 'title', tracking_data)
-    add_if_existing(locals(), 'customer_name', tracking_data)
-    add_if_existing(locals(), 'customer_email', tracking_data)
-    add_if_existing(locals(), 'order_id', tracking_data)
-    add_if_existing(locals(), 'lang', tracking_data)
+    _add_if_existing(locals(), 'title', tracking_data)
+    _add_if_existing(locals(), 'customer_name', tracking_data)
+    _add_if_existing(locals(), 'customer_email', tracking_data)
+    _add_if_existing(locals(), 'order_id', tracking_data)
+    _add_if_existing(locals(), 'lang', tracking_data)
     return tracking_data
 
 
