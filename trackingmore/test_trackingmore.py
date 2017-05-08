@@ -1,5 +1,5 @@
 from . import trackingmore
-from trackingmore.testdata import testdata
+from .testdata import testdata
 
 trackingmore.set_api_key(testdata.API_KEY)
 
@@ -35,33 +35,23 @@ def test_create_one_tracking_item():
     ttd = dict(testdata.TEST_TRACKING_DATAS[0])
     ret = trackingmore.create_tracking_item(ttd)
 
-    assert 'id' in ret['data']
-    ret['data'].pop('id')
+    assert 'id' in ret
+    ret.pop('id')
 
-    assert 'created_at' in ret['data']
-    ret['data'].pop('created_at')
+    assert 'created_at' in ret
+    ret.pop('created_at')
 
-    assert 'status' in ret['data']
-    ret['data'].pop('status')
+    assert 'status' in ret
+    ret.pop('status')
 
     ttd.pop('lang')
-    assert ret['data'] == ttd
-
-    expected_meta = {'type': 'Success',
-                     'message': 'Success',
-                     'code': 200}
-    assert ret['meta'] == expected_meta
+    assert ret == ttd
 
 
 def test_delete_one_tracking_item():
     ttd = dict(testdata.TEST_TRACKING_DATAS[0])
     ret = trackingmore.delete_tracking_item(ttd['carrier_code'], ttd['tracking_number'])
-    expected_ret = {
-        'data': [],
-        'meta': {'type': 'Success',
-                 'message': 'Success',
-                 'code': 200}
-    }
+    expected_ret = []
     assert ret == expected_ret
 
 
@@ -69,24 +59,15 @@ def test_create_tracking_items_batch():
     ttds = [dict(ttd) for ttd in testdata.TEST_TRACKING_DATAS]
     ret = trackingmore.create_tracking_items_batch(ttds)
 
-    expected_meta = {'type': 'Success',
-                     'message': 'The request was successful and a resource was created.',
-                     'code': 201}
-    assert ret['meta'] == expected_meta
-
-    assert ret['data']['submitted'] == 4
-    assert ret['data']['added'] == 3
-    assert len(ret['data']['trackings']) == 3
-    assert len(ret['data']['errors']) == 1
-
+    assert ret['submitted'] == 4
+    assert ret['added'] == 3
+    assert len(ret['trackings']) == 3
+    assert len(ret['errors']) == 1
 
 
 def test_get_all_trackings():
     ret = trackingmore.get_all_trackings()
-    expected_meta = {'type': 'Success',
-                     'message': 'Success',
-                     'code': 200}
-    assert ret['meta'] == expected_meta
+    assert len(ret['items']) == 3
     # TODO: check with trackings added so far
 
 

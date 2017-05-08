@@ -1,4 +1,4 @@
-from typing import NewType
+from typing import NewType, Dict, Any
 
 from enum import Enum
 from datetime import datetime, timezone
@@ -37,13 +37,12 @@ class TrackingStatus(Enum):
     EXPIRED = 'expired'
 
 
-def set_api_key(api_key):
+def set_api_key(api_key: str):
     """
     Set the API key to be used for authentication with every request.
     
     If you need one, get it by registering for a TrackingMore account.
     :param api_key: Authentication token
-    :return: 
     """
     global headers
     headers = {
@@ -58,12 +57,30 @@ def _check_api_key():
         raise ValueError("did you set the API key with trackingmore.set_api_key('...')?")
 
 
+class TrackingMoreAPIException(Exception):
+    def __init__(self, meta_dict: dict):
+        super().__init__(meta_dict['message'])
+        self.err_code = meta_dict['code']
+        self.err_type = meta_dict['type']
+
+
+def _check_response(resp: requests.Response):
+    if resp.status_code not in [200, 201]:
+        if resp.status_code != 204 and 'meta' in resp.json():
+            raise TrackingMoreAPIException(resp.json()['meta'])
+        else:
+            resp.raise_for_status()
+
+
+BASE_URL = 'http://api.trackingmore.com/v2'
+
+
 def _add_if_existing(args, arg_name, target_dict):
     if arg_name == 'status':
         if arg_name in args and type(args[arg_name]) is TrackingStatus:
             target_dict[arg_name] = args[arg_name].name
     else:
-        if arg_name in args:
+        if args[arg_name]:
             if type(args[arg_name]) is datetime:
                 dt = args[arg_name]
                 target_dict[arg_name] = dt.replace(tzinfo=timezone.utc).timestamp()
@@ -71,7 +88,75 @@ def _add_if_existing(args, arg_name, target_dict):
                 target_dict[arg_name] = args[arg_name]
 
 
-BASE_URL = 'http://api.trackingmore.com/v2'
+TrackingData = NewType('TrackingData', dict)
+
+
+def create_tracking_data(carrier_code: str, tracking_number: str, title: str = None, customer_name: str = None,
+                         customer_email: str = None, order_id: str = None, lang: str = None) -> TrackingData:
+    """
+    Create a dictionary holding information about a tracking item
+    
+    :param carrier_code: TrackingMore code indentifying the courier company
+    :param tracking_number: Package tracking ID
+    :param title: (Optional) name for this tracking item
+    :param customer_name: (Optional) customer name
+    :param customer_email: (Optional) customer email
+    :param order_id: (Optional) your ID for this tracking item
+    :param lang: (Optional) language for strings returned by the courier (if supported)
+    :return: 
+    """
+    tracking_data = {
+        'carrier_code': carrier_code,
+        'tracking_number': tracking_number,
+    }
+    _add_if_existing(locals(), 'title', tracking_data)
+    _add_if_existing(locals(), 'customer_name', tracking_data)
+    _add_if_existing(locals(), 'customer_email', tracking_data)
+    _add_if_existing(locals(), 'order_id', tracking_data)
+    _add_if_existing(locals(), 'lang', tracking_data)
+    return tracking_data
+
+
+def create_tracking_item(tracking_data: TrackingData) -> Dict[str, Any]:
+    """
+    Create a tracking item in the TrackingMore system.
+    
+    :param tracking_data: Information about the package to be tracked
+    :return: Information about the created tracking item, or [] if already existing
+    """
+    _check_api_key()
+    r = requests.post(BASE_URL + '/trackings/post', headers=headers, data=json.dumps(tracking_data))
+    _check_response(r)
+    return r.json()['data']
+
+
+def create_tracking_items_batch(tracking_data_list: [TrackingData]) -> Dict[str, Any]:
+    """
+    Create multiple tracking items.
+    
+    :param tracking_data_list: Information about the packages to be tracked, in a list
+    :return: Information about the created tracking items, in a list
+    """
+    _check_api_key()
+    r = requests.post(BASE_URL + '/trackings/batch', headers=headers, data=json.dumps(tracking_data_list))
+    _check_response(r)
+    return r.json()['data']
+
+
+def update_tracking_item(tracking_data: TrackingData) -> Dict[str, Any]:
+    """
+    Update information about a previously created tracking item.
+    
+    :param tracking_data: Partial, updated information about a tracking item
+    :return: Information about the updated tracking item
+    """
+    _check_api_key()
+    tracking_data = dict(tracking_data)
+    carrier_code = tracking_data.pop('carrier_code')
+    tracking_number = tracking_data.pop('tracking_number')
+    r = requests.put(BASE_URL + '/trackings/{}/{}'.format(carrier_code, tracking_number), headers=headers)
+    _check_response(r)
+    return r.json()['data']
 
 
 def get_all_trackings(limit: int = None, page: int = None, status: TrackingStatus = None,
@@ -105,75 +190,57 @@ def get_all_trackings(limit: int = None, page: int = None, status: TrackingStatu
     return r.json()
 
 
-TrackingData = NewType('TrackingData', dict)
-
-
-def create_tracking_data(carrier_code: str, tracking_number: str, title: str = None, customer_name: str = None,
-                         customer_email: str = None, order_id: str = None, lang: str = None) -> TrackingData:
+def get_tracking_item(carrier_code: str, tracking_number: str) -> Dict[str, Any]:
     """
-    Create a dictionary holding information about a tracking item
+    Fetch information about a previously created tracking item.
     
-    :param carrier_code: TrackingMore code indentifying the courier company
-    :param tracking_number: Package tracking ID
-    :param title: (Optional) name for this tracking item
-    :param customer_name: (Optional) customer name
-    :param customer_email: (Optional) customer email
-    :param order_id: (Optional) your ID for this tracking item
-    :param lang: (Optional) language for strings returned by the courier (if supported)
-    :return: 
+    :param carrier_code: The TrackingMore courier code
+    :param tracking_number: The package's tracking number
+    :return: A big fat dict with all possible information about the shipping
     """
-    tracking_data = {
-        'carrier_code': carrier_code,
-        'tracking_number': tracking_number,
-    }
-    _add_if_existing(locals(), 'title', tracking_data)
-    _add_if_existing(locals(), 'customer_name', tracking_data)
-    _add_if_existing(locals(), 'customer_email', tracking_data)
-    _add_if_existing(locals(), 'order_id', tracking_data)
-    _add_if_existing(locals(), 'lang', tracking_data)
-    return tracking_data
-
-
-def create_tracking_item(tracking_data):
-    _check_api_key()
-    r = requests.post(BASE_URL + '/trackings/post', headers=headers, data=json.dumps(tracking_data))
-    return r.json()
-
-
-def create_tracking_items_batch(tracking_data_list):
-    _check_api_key()
-    r = requests.post(BASE_URL + '/trackings/batch', headers=headers, data=json.dumps(tracking_data_list))
-    return r.json()
-
-
-def get_tracking_item(carrier_code, tracking_number):
     _check_api_key()
     r = requests.get(BASE_URL + '/trackings/{}/{}'.format(carrier_code, tracking_number), headers=headers)
-    return r.json()
+    _check_response(r)
+    return r.json()['data']
 
 
-def update_tracking_item(carrier_code, tracking_number):
-    _check_api_key()
-    r = requests.put(BASE_URL + '/trackings/{}/{}'.format(carrier_code, tracking_number), headers=headers)
-    return r.json()
-
-
-def delete_tracking_item(carrier_code, tracking_number):
+def delete_tracking_item(carrier_code: str, tracking_number: str) -> Dict[str, Any]:
+    """
+    Remove a tracking item from the TrackingMore system.
+    
+    :param carrier_code: The TrackingMore courier code
+    :param tracking_number: The package's tracking number
+    :return: A big fat dict with all possible information about the shipping
+    """
     _check_api_key()
     r = requests.delete(BASE_URL + '/trackings/{}/{}'.format(carrier_code, tracking_number), headers=headers)
-    return r.json()
+    _check_response(r)
+    return r.json()['data']
 
 
-def realtime_tracking(tracking_data):
+def realtime_tracking(tracking_data: TrackingData) -> Dict[str, Any]:
+    """
+    Fetch updated tracking information from the courier's API.
+    
+    Stricter rate limiting applies.
+    :param tracking_data: Information about the package to be found 
+    :return: A big fat dict with all possible information about the shipping
+    """
     _check_api_key()
     r = requests.post(BASE_URL + '/trackings/realtime', headers=headers, data=json.dumps(tracking_data))
-    return r.json()
+    _check_response(r)
+    return r.json()['data']
 
 
-def detect_carrier_from_code(tracking_code):
+def detect_carrier_from_code(tracking_code: str) -> Dict[str, Any]:
+    """
+    Guess the courier from the tracking number.
+    
+    :param tracking_code: The package tracking number
+    :return: A dictionary with the courier's name and TrackingMore code
+    """
     _check_api_key()
     payload = {'tracking_number': tracking_code.strip()}
     r = requests.post(BASE_URL + '/carriers/detect', headers=headers, data=json.dumps(payload))
-    return r.json()
-
-
+    _check_response(r)
+    return r.json()['data']
