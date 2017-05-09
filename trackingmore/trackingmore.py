@@ -58,21 +58,16 @@ def _check_api_key():
 
 
 class TrackingMoreAPIException(Exception):
-    def __init__(self, meta_dict: dict):
+    def __init__(self, meta_dict: dict) -> None:
         super().__init__(meta_dict['message'])
         self.err_code = meta_dict['code']
         self.err_type = meta_dict['type']
 
 
 def _check_response(resp: requests.Response):
-    if resp.status_code not in [200, 201]:
-        if resp.status_code != 204 and 'meta' in resp.json():
-            raise TrackingMoreAPIException(resp.json()['meta'])
-        else:
-            resp.raise_for_status()
-    else:
-        if resp.json()['meta']['code'] == 4021:  # an "out of credit" error has a 200 status code
-            raise TrackingMoreAPIException(resp.json()['meta'])
+    resp.raise_for_status()
+    if resp.json()['meta']['code'] not in [200, 201]:  # TrackingMore errors give an HTTP 200 status code
+        raise TrackingMoreAPIException(resp.json()['meta'])
 
 
 BASE_URL = 'http://api.trackingmore.com/v2'
@@ -91,7 +86,7 @@ def _add_if_existing(args, arg_name, target_dict):
                 target_dict[arg_name] = args[arg_name]
 
 
-TrackingData = NewType('TrackingData', dict)
+TrackingData = NewType('TrackingData', Dict[str, str])
 
 
 def create_tracking_data(carrier_code: str, tracking_number: str, title: str = None, customer_name: str = None,

@@ -1,7 +1,15 @@
+import pytest
 from . import trackingmore
 from .testdata import testdata
 
-trackingmore.set_api_key(testdata.API_KEY)
+
+def test_set_api_key():
+    with pytest.raises(ValueError):
+        trackingmore._check_api_key()
+
+    trackingmore.set_api_key(testdata.API_KEY)
+
+    trackingmore._check_api_key()
 
 
 def test_create_tracking_data():
@@ -48,6 +56,23 @@ def test_create_one_tracking_item():
     assert ret == ttd
 
 
+def test_get_tracking_item():
+    try:
+        ttd = dict(testdata.TEST_TRACKING_DATAS[0])
+        ret = trackingmore.get_tracking_item(ttd['carrier_code'], ttd['tracking_number'])
+    except trackingmore.TrackingMoreAPIException as tme:
+        assert tme.err_code == 4021  # if we fail because we do not have any more credit it's ok
+
+
+def test_update_tracking_item():
+    try:
+        ttd = dict(testdata.TEST_TRACKING_DATAS[0])
+        ttd['title'] = 'new_title'
+        ret = trackingmore.update_tracking_item(ttd)
+    except trackingmore.TrackingMoreAPIException as tme:
+        assert tme.err_code in [4017, 4021]  # if we fail because we do not have any more credit it's ok
+
+
 def test_delete_one_tracking_item():
     ttd = dict(testdata.TEST_TRACKING_DATAS[0])
     ret = trackingmore.delete_tracking_item(ttd['carrier_code'], ttd['tracking_number'])
@@ -84,5 +109,8 @@ def test_detect_courier():
 
 
 def test_cleanup():
-    for ttd in testdata.TEST_TRACKING_DATAS:
-        trackingmore.delete_tracking_item(ttd['carrier_code'], ttd['tracking_number'])
+    try:
+        for ttd in testdata.TEST_TRACKING_DATAS:
+            trackingmore.delete_tracking_item(ttd['carrier_code'], ttd['tracking_number'])
+    except trackingmore.TrackingMoreAPIException as tme:
+        assert tme.err_code in [4017, 4021]  # if we fail because we do not have any more credit it's ok
