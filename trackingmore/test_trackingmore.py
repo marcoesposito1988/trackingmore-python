@@ -66,9 +66,12 @@ def test_create_tracking_items_batch():
 
 
 def test_get_all_trackings():
-    ret = trackingmore.get_all_trackings()
-    assert len(ret['items']) == 3
-    # TODO: check with trackings added so far
+    try:
+        ret = trackingmore.get_all_trackings()
+        assert len(ret['items']) == 3
+        # TODO: check with trackings added so far
+    except trackingmore.TrackingMoreAPIException as tme:
+        assert tme.err_code == 4021  # if we fail because we do not have any more credit it's ok
 
 
 def test_detect_courier():

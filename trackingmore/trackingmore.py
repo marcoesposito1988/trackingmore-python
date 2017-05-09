@@ -70,6 +70,9 @@ def _check_response(resp: requests.Response):
             raise TrackingMoreAPIException(resp.json()['meta'])
         else:
             resp.raise_for_status()
+    else:
+        if resp.json()['meta']['code'] == 4021:  # an "out of credit" error has a 200 status code
+            raise TrackingMoreAPIException(resp.json()['meta'])
 
 
 BASE_URL = 'http://api.trackingmore.com/v2'
@@ -187,6 +190,7 @@ def get_all_trackings(limit: int = None, page: int = None, status: TrackingStatu
     _add_if_existing(locals(), 'update_time_max', payload)
 
     r = requests.get(BASE_URL + '/trackings/get', headers=headers)
+    _check_response(r)
     return r.json()
 
 
