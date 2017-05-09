@@ -64,6 +64,14 @@ def test_get_tracking_item():
         assert tme.err_code == 4021  # if we fail because we do not have any more credit it's ok
 
 
+def test_realtime_tracking():
+    try:
+        ttd = dict(testdata.TEST_TRACKING_DATAS[0])
+        ret = trackingmore.realtime_tracking(ttd)
+    except trackingmore.TrackingMoreAPIException as tme:
+        assert tme.err_code == 4021  # if we fail because we do not have any more credit it's ok
+
+
 def test_update_tracking_item():
     try:
         ttd = dict(testdata.TEST_TRACKING_DATAS[0])
