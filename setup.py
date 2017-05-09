@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='trackingmore',
-    version='0.1dev1',
+    version='0.1',
     packages=['trackingmore',],
     author='Marco Esposito',
     author_email='marcoesposito1988@gmail.com',
