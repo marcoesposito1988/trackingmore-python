@@ -1,6 +1,7 @@
 build
 dist
 trackingmore.egg-info
+.coverage
 
 trackingmore/testdata/testdata.py
 .idea
