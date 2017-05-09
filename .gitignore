@@ -7,3 +7,4 @@ trackingmore/testdata/testdata.py
 *.iml
 __pycache__
 .cache
+.mypy_cache
